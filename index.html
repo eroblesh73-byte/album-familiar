@@ -1,132 +1,131 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Álbum Familiar AR</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#c4813a" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Álbum AR" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Georgia, serif; background: #1a1008; overflow: hidden; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#000; overflow:hidden; font-family:Georgia,serif; }
 
     #splash {
-      position: fixed; inset: 0;
-      background: linear-gradient(160deg, #2c1a0e 0%, #1a1008 60%, #0e0a05 100%);
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; z-index: 9999; padding: 2rem; text-align: center;
+      position:fixed; inset:0;
+      background:linear-gradient(160deg,#2c1a0e,#1a1008);
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; z-index:999; padding:2rem; text-align:center;
     }
-    #splash .icono { font-size: 4rem; margin-bottom: 1rem; animation: pulso 2s ease-in-out infinite; }
-    @keyframes pulso { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-    #splash h1 { font-size: 2rem; color: #f5e6c8; margin-bottom: 0.5rem; }
-    #splash p { color: #c4a97d; font-size: 1rem; line-height: 1.6; max-width: 320px; margin-bottom: 2rem; }
+    #splash h1 { font-size:2rem; color:#f5e6c8; margin-bottom:0.5rem; }
+    #splash p { color:#c4a97d; font-size:1rem; line-height:1.6; max-width:300px; margin-bottom:2rem; }
     #splash button {
-      background: #c4813a; color: #fff8f0; border: none;
-      padding: 0.9rem 2.5rem; border-radius: 50px; font-size: 1.1rem;
-      font-family: Georgia, serif; cursor: pointer;
+      background:#c4813a; color:#fff; border:none;
+      padding:1rem 2.5rem; border-radius:50px; font-size:1.1rem; cursor:pointer;
     }
 
-    #panel-recuerdo {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: rgba(20,12,4,0.92); border-top: 1px solid #c4813a55;
-      padding: 1rem 1.5rem 1.5rem; transform: translateY(100%);
-      transition: transform 0.4s ease; z-index: 100;
+    #contenedor { position:fixed; inset:0; display:none; }
+
+    #contenedor video.camara {
+      position:absolute; inset:0; width:100%; height:100%;
+      object-fit:cover;
     }
-    #panel-recuerdo.visible { transform: translateY(0); }
-    #panel-recuerdo .etiqueta { font-size: 0.7rem; color: #c4813a; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.4rem; }
-    #panel-recuerdo .titulo-foto { font-size: 1.1rem; color: #f5e6c8; margin-bottom: 0.5rem; }
-    #panel-recuerdo .texto-recuerdo { font-size: 0.95rem; color: #c4a97d; line-height: 1.7; font-style: italic; }
+
+    canvas { position:absolute; inset:0; width:100%!important; height:100%!important; }
+
+    #panel {
+      position:fixed; bottom:0; left:0; right:0;
+      background:rgba(20,12,4,0.92); border-top:1px solid #c4813a55;
+      padding:1rem 1.5rem 2rem; transform:translateY(100%);
+      transition:transform 0.4s; z-index:100;
+    }
+    #panel.visible { transform:translateY(0); }
+    #panel .etiqueta { font-size:0.7rem; color:#c4813a; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:0.4rem; }
+    #panel .titulo { font-size:1.1rem; color:#f5e6c8; margin-bottom:0.5rem; }
+    #panel .recuerdo { font-size:0.95rem; color:#c4a97d; line-height:1.7; font-style:italic; }
 
     #indicador {
-      position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
-      background: rgba(20,12,4,0.85); border: 1px solid #c4813a44;
-      color: #c4a97d; font-size: 0.85rem; padding: 0.5rem 1.2rem;
-      border-radius: 50px; z-index: 100; white-space: nowrap;
-      transition: opacity 0.4s;
+      position:fixed; top:1.5rem; left:50%; transform:translateX(-50%);
+      background:rgba(20,12,4,0.85); color:#c4a97d; font-size:0.85rem;
+      padding:0.5rem 1.2rem; border-radius:50px; z-index:100; white-space:nowrap;
     }
-    #indicador.oculto { opacity: 0; pointer-events: none; }
+    #indicador.oculto { display:none; }
+
+    #video-recuerdo { display:none; }
   </style>
 </head>
 <body>
 
-  <div id="splash">
-    <div class="icono">📷</div>
-    <h1>Álbum Familiar</h1>
-    <p>Apunta la cámara a cualquier foto de la casa y descubre el recuerdo que guarda.</p>
-    <button onclick="iniciar()">Abrir cámara</button>
-  </div>
+<div id="splash">
+  <div style="font-size:3.5rem;margin-bottom:1rem;animation:p 2s infinite">📷</div>
+  <h1>Álbum Familiar</h1>
+  <p>Apunta la cámara a una foto de la casa y revive el recuerdo.</p>
+  <button onclick="iniciar()">Abrir cámara</button>
+</div>
 
+<style>@keyframes p{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}</style>
+
+<div id="contenedor">
   <div id="indicador">📸 Apunta a una foto...</div>
+</div>
 
-  <div id="panel-recuerdo">
-    <div class="etiqueta">✦ Recuerdo</div>
-    <div class="titulo-foto" id="titulo-foto"></div>
-    <div class="texto-recuerdo" id="texto-recuerdo"></div>
-  </div>
+<div id="panel">
+  <div class="etiqueta">✦ Recuerdo</div>
+  <div class="titulo" id="titulo"></div>
+  <div class="recuerdo" id="recuerdo"></div>
+</div>
 
-  <a-scene
-    id="escena"
-    mindar-image="imageTargetSrc: foto1.mind;"
-    color-space="sRGB"
-    renderer="colorManagement: true; physicallyCorrectLights: true;"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-    style="display:none;"
-  >
-    <a-assets>
-      <video id="video1" src="videos/video1.mp4" preload="auto" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
-    </a-assets>
+<video id="video-recuerdo" src="videos/video1.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+<script>
+const FOTOS = [
+  {
+    titulo: "Mi recuerdo",
+    recuerdo: "Aquí va el texto de tu recuerdo especial..."
+  }
+];
 
-    <a-entity mindar-image-target="targetIndex: 0"
-      data-titulo="Mi recuerdo"
-      data-recuerdo="Aquí va el texto de tu recuerdo especial...">
-      <a-video src="#video1" width="1" height="0.55" position="0 0 0"></a-video>
-    </a-entity>
-  </a-scene>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
-    }
-
-    function iniciar() {
+async function iniciar() {
   document.getElementById('splash').style.display = 'none';
-  document.getElementById('escena').style.display = 'block';
+  document.getElementById('contenedor').style.display = 'block';
 
-  // Pedir permiso de cámara explícitamente
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-    .then(stream => {
-      stream.getTracks().forEach(track => track.stop());
-    })
-    .catch(err => {
-      alert('Necesitas dar permiso de cámara para usar la app. Ve a Ajustes > Chrome > Cámara > Permitir');
-    });
-
-  const target = document.querySelector('[mindar-image-target]');
-  const video = document.getElementById('video1');
-
-  target.addEventListener('targetFound', () => {
-    video.play().catch(() => {});
-    document.getElementById('titulo-foto').textContent = target.dataset.titulo;
-    document.getElementById('texto-recuerdo').textContent = target.dataset.recuerdo;
-    document.getElementById('panel-recuerdo').classList.add('visible');
-    document.getElementById('indicador').classList.add('oculto');
+  const mindarController = new window.MINDAR.IMAGE.MindARThree({
+    container: document.getElementById('contenedor'),
+    imageTargetSrc: 'foto1.mind',
   });
 
-  target.addEventListener('targetLost', () => {
-    video.pause();
-    document.getElementById('panel-recuerdo').classList.remove('visible');
+  const { renderer, scene, camera } = mindarController;
+
+  const videoRecuerdo = document.getElementById('video-recuerdo');
+
+  // Crear plano con el video encima del marcador
+  const geometry = new THREE.PlaneGeometry(1, 0.55);
+  const texture = new THREE.VideoTexture(videoRecuerdo);
+  const material = new THREE.MeshBasicMaterial({ map: texture });
+  const plane = new THREE.Mesh(geometry, material);
+
+  const anchor = mindarController.addAnchor(0);
+  anchor.group.add(plane);
+
+  anchor.onTargetFound = () => {
+    videoRecuerdo.play().catch(()=>{});
+    document.getElementById('titulo').textContent = FOTOS[0].titulo;
+    document.getElementById('recuerdo').textContent = FOTOS[0].recuerdo;
+    document.getElementById('panel').classList.add('visible');
+    document.getElementById('indicador').classList.add('oculto');
+  };
+
+  anchor.onTargetLost = () => {
+    videoRecuerdo.pause();
+    document.getElementById('panel').classList.remove('visible');
     document.getElementById('indicador').classList.remove('oculto');
+  };
+
+  await mindarController.start();
+
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
   });
 }
-  </script>
+</script>
 
 </body>
 </html>
