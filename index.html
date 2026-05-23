@@ -1,70 +1,161 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Álbum Familiar AR</title>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js"></script>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#000; overflow:hidden; font-family:Georgia,serif; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    #splash {
-      position:fixed; inset:0;
-      background:linear-gradient(160deg,#2c1a0e,#1a1008);
-      display:flex; flex-direction:column; align-items:center;
-      justify-content:center; z-index:999; padding:2rem; text-align:center;
-    }
-    #splash h1 { font-size:2rem; color:#f5e6c8; margin-bottom:0.5rem; }
-    #splash p { color:#c4a97d; font-size:1rem; line-height:1.6; max-width:300px; margin-bottom:2rem; }
-    #splash button {
-      background:#c4813a; color:#fff; border:none;
-      padding:1rem 2.5rem; border-radius:50px; font-size:1.1rem; cursor:pointer;
-    }
+<title>Álbum Familiar AR</title>
 
-    #contenedor { position:fixed; inset:0; display:none; }
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
 
-    #contenedor video.camara {
-      position:absolute; inset:0; width:100%; height:100%;
-      object-fit:cover;
-    }
+body{
+  background:#000;
+  overflow:hidden;
+  font-family:Georgia,serif;
+}
 
-    canvas { position:absolute; inset:0; width:100%!important; height:100%!important; }
+#splash{
+  position:fixed;
+  inset:0;
+  background:linear-gradient(160deg,#2c1a0e,#1a1008);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  padding:2rem;
+  text-align:center;
+}
 
-    #panel {
-      position:fixed; bottom:0; left:0; right:0;
-      background:rgba(20,12,4,0.92); border-top:1px solid #c4813a55;
-      padding:1rem 1.5rem 2rem; transform:translateY(100%);
-      transition:transform 0.4s; z-index:100;
-    }
-    #panel.visible { transform:translateY(0); }
-    #panel .etiqueta { font-size:0.7rem; color:#c4813a; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:0.4rem; }
-    #panel .titulo { font-size:1.1rem; color:#f5e6c8; margin-bottom:0.5rem; }
-    #panel .recuerdo { font-size:0.95rem; color:#c4a97d; line-height:1.7; font-style:italic; }
+#splash h1{
+  font-size:2rem;
+  color:#f5e6c8;
+  margin-bottom:.5rem;
+}
 
-    #indicador {
-      position:fixed; top:1.5rem; left:50%; transform:translateX(-50%);
-      background:rgba(20,12,4,0.85); color:#c4a97d; font-size:0.85rem;
-      padding:0.5rem 1.2rem; border-radius:50px; z-index:100; white-space:nowrap;
-    }
-    #indicador.oculto { display:none; }
+#splash p{
+  color:#c4a97d;
+  line-height:1.6;
+  max-width:300px;
+  margin-bottom:2rem;
+}
 
-    #video-recuerdo { display:none; }
-  </style>
+#splash button{
+  background:#c4813a;
+  color:#fff;
+  border:none;
+  padding:1rem 2.5rem;
+  border-radius:50px;
+  font-size:1.1rem;
+  cursor:pointer;
+}
+
+#contenedor{
+  position:fixed;
+  inset:0;
+  display:none;
+}
+
+canvas{
+  position:absolute;
+  inset:0;
+  width:100%!important;
+  height:100%!important;
+}
+
+#panel{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:rgba(20,12,4,.92);
+  border-top:1px solid #c4813a55;
+  padding:1rem 1.5rem 2rem;
+  transform:translateY(100%);
+  transition:.4s;
+  z-index:100;
+}
+
+#panel.visible{
+  transform:translateY(0);
+}
+
+#panel .etiqueta{
+  font-size:.7rem;
+  color:#c4813a;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  margin-bottom:.4rem;
+}
+
+#panel .titulo{
+  font-size:1.1rem;
+  color:#f5e6c8;
+  margin-bottom:.5rem;
+}
+
+#panel .recuerdo{
+  font-size:.95rem;
+  color:#c4a97d;
+  line-height:1.7;
+  font-style:italic;
+}
+
+#indicador{
+  position:fixed;
+  top:1.5rem;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(20,12,4,.85);
+  color:#c4a97d;
+  font-size:.85rem;
+  padding:.5rem 1.2rem;
+  border-radius:50px;
+  z-index:100;
+}
+
+#indicador.oculto{
+  display:none;
+}
+
+#video-recuerdo{
+  display:none;
+}
+
+@keyframes pulse{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.08);}
+}
+</style>
 </head>
+
 <body>
 
 <div id="splash">
-  <div style="font-size:3.5rem;margin-bottom:1rem;animation:p 2s infinite">📷</div>
+  <div style="font-size:3.5rem;margin-bottom:1rem;animation:pulse 2s infinite">
+    📷
+  </div>
+
   <h1>Álbum Familiar</h1>
-  <p>Apunta la cámara a una foto de la casa y revive el recuerdo.</p>
-  <button onclick="iniciar()">Abrir cámara</button>
+
+  <p>
+    Apunta la cámara a una foto y revive el recuerdo.
+  </p>
+
+  <button onclick="iniciar()">
+    Abrir cámara
+  </button>
 </div>
 
-<style>@keyframes p{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}</style>
-
 <div id="contenedor">
-  <div id="indicador">📸 Apunta a una foto...</div>
+  <div id="indicador">
+    📸 Apunta a una foto...
+  </div>
 </div>
 
 <div id="panel">
@@ -73,75 +164,118 @@
   <div class="recuerdo" id="recuerdo"></div>
 </div>
 
-<video id="video-recuerdo" src="videos/video1.mp4" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
+<video
+  id="video-recuerdo"
+  src="./videos/video1.mp4"
+  loop
+  muted
+  playsinline
+  webkit-playsinline
+  crossorigin="anonymous">
+</video>
 
-<script>
+<script type="module">
+
+import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
+import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js';
+
 const FOTOS = [
-  {
-    titulo: "Mi recuerdo",
-    recuerdo: "Aquí va el texto de tu recuerdo especial..."
-  }
+{
+  titulo:"Mi recuerdo",
+  recuerdo:"Aquí va el texto de tu recuerdo especial..."
+}
 ];
 
-async function iniciar() {
-  document.getElementById('splash').style.display = 'none';
-  document.getElementById('contenedor').style.display = 'block';
+window.iniciar = async () => {
 
-  const mindarController = new window.MINDAR.IMAGE.MindARThree({
-    container: document.getElementById('contenedor'),
-    imageTargetSrc: 'foto1.mind',
-  });
+  try {
 
-  const { renderer, scene, camera } = mindarController;
+    document.getElementById("splash").style.display = "none";
+    document.getElementById("contenedor").style.display = "block";
 
-  const videoRecuerdo = document.getElementById('video-recuerdo');
+    const mindarThree = new MindARThree({
+      container: document.querySelector("#contenedor"),
+      imageTargetSrc: "./foto1.mind"
+    });
 
-  // Crear plano con el video encima del marcador
-  const geometry = new THREE.PlaneGeometry(1, 0.55);
-  const texture = new THREE.VideoTexture(videoRecuerdo);
-  const material = new THREE.MeshBasicMaterial({ map: texture });
-  const plane = new THREE.Mesh(geometry, material);
+    const {
+      renderer,
+      scene,
+      camera
+    } = mindarThree;
 
-  const anchor = mindarController.addAnchor(0);
-  anchor.group.add(plane);
+    const anchor = mindarThree.addAnchor(0);
 
-  anchor.onTargetFound = () => {
-    videoRecuerdo.play().catch(()=>{});
-    document.getElementById('titulo').textContent = FOTOS[0].titulo;
-    document.getElementById('recuerdo').textContent = FOTOS[0].recuerdo;
-    document.getElementById('panel').classList.add('visible');
-    document.getElementById('indicador').classList.add('oculto');
-  };
+    const videoRecuerdo =
+      document.getElementById("video-recuerdo");
 
-  anchor.onTargetLost = () => {
-    videoRecuerdo.pause();
-    document.getElementById('panel').classList.remove('visible');
-    document.getElementById('indicador').classList.remove('oculto');
-  };
-  
-// Mostrar cámara directamente
-const stream = await navigator.mediaDevices.getUserMedia({ 
-  video: { facingMode: 'environment', width: 1280, height: 720 } 
-});
-const camEl = document.createElement('video');
-camEl.srcObject = stream;
-camEl.autoplay = true;
-camEl.playsinline = true;
-camEl.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
-document.getElementById('contenedor').prepend(camEl);
-  await mindarController.start();
-  
-// Corregir brillo en Samsung
-const canvas = document.querySelector('canvas');
-if (canvas) canvas.style.filter = 'brightness(3)';
+    const texture =
+      new THREE.VideoTexture(videoRecuerdo);
 
-// Corregir video de cámara
-const camVideo = document.querySelector('#contenedor video');
-if (camVideo) camVideo.style.filter = 'brightness(3)';
-  renderer.setAnimationLoop(() => {
-    renderer.render(scene, camera);
-  });
-}
+    const geometry =
+      new THREE.PlaneGeometry(1,0.56);
+
+    const material =
+      new THREE.MeshBasicMaterial({
+        map:texture,
+        transparent:true
+      });
+
+    const plane =
+      new THREE.Mesh(
+        geometry,
+        material
+      );
+
+    anchor.group.add(plane);
+
+    anchor.onTargetFound = () => {
+
+      videoRecuerdo.play().catch(()=>{});
+
+      document.getElementById("titulo").textContent =
+        FOTOS[0].titulo;
+
+      document.getElementById("recuerdo").textContent =
+        FOTOS[0].recuerdo;
+
+      document.getElementById("panel")
+        .classList.add("visible");
+
+      document.getElementById("indicador")
+        .classList.add("oculto");
+    };
+
+    anchor.onTargetLost = () => {
+
+      videoRecuerdo.pause();
+
+      document.getElementById("panel")
+        .classList.remove("visible");
+
+      document.getElementById("indicador")
+        .classList.remove("oculto");
+    };
+
+    await mindarThree.start();
+
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene,camera);
+    });
+
+    console.log("MindAR iniciado correctamente");
+
+  } catch(error){
+
+    console.error(error);
+
+    alert(
+      "Error iniciando AR:\n\n" +
+      error.message
+    );
+  }
+};
+
 </script>
 
 </body>
