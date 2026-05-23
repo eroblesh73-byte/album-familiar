@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Álbum Familiar AR</title>
+
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
 <style>
 *{
@@ -25,33 +27,30 @@ body{
   background:linear-gradient(160deg,#2c1a0e,#1a1008);
   display:flex;
   flex-direction:column;
-  align-items:center;
   justify-content:center;
-  z-index:999;
-  padding:2rem;
+  align-items:center;
   text-align:center;
+  z-index:999;
 }
 
 #splash h1{
-  font-size:2rem;
   color:#f5e6c8;
-  margin-bottom:.5rem;
+  margin-bottom:10px;
 }
 
 #splash p{
   color:#c4a97d;
-  line-height:1.6;
-  max-width:300px;
-  margin-bottom:2rem;
+  margin-bottom:30px;
+  max-width:320px;
 }
 
 #splash button{
   background:#c4813a;
-  color:#fff;
+  color:white;
   border:none;
-  padding:1rem 2.5rem;
   border-radius:50px;
-  font-size:1.1rem;
+  padding:15px 35px;
+  font-size:18px;
   cursor:pointer;
 }
 
@@ -61,23 +60,27 @@ body{
   display:none;
 }
 
-canvas{
-  position:absolute;
-  inset:0;
-  width:100%!important;
-  height:100%!important;
+#indicador{
+  position:fixed;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,.75);
+  color:white;
+  padding:10px 20px;
+  border-radius:30px;
+  z-index:100;
 }
 
 #panel{
   position:fixed;
-  bottom:0;
   left:0;
   right:0;
+  bottom:0;
   background:rgba(20,12,4,.92);
-  border-top:1px solid #c4813a55;
-  padding:1rem 1.5rem 2rem;
+  padding:20px;
   transform:translateY(100%);
-  transition:.4s;
+  transition:.3s;
   z-index:100;
 }
 
@@ -85,51 +88,17 @@ canvas{
   transform:translateY(0);
 }
 
-#panel .etiqueta{
-  font-size:.7rem;
-  color:#c4813a;
-  letter-spacing:.15em;
-  text-transform:uppercase;
-  margin-bottom:.4rem;
-}
-
-#panel .titulo{
-  font-size:1.1rem;
+#titulo{
   color:#f5e6c8;
-  margin-bottom:.5rem;
+  margin-bottom:10px;
 }
 
-#panel .recuerdo{
-  font-size:.95rem;
+#recuerdo{
   color:#c4a97d;
-  line-height:1.7;
-  font-style:italic;
-}
-
-#indicador{
-  position:fixed;
-  top:1.5rem;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(20,12,4,.85);
-  color:#c4a97d;
-  font-size:.85rem;
-  padding:.5rem 1.2rem;
-  border-radius:50px;
-  z-index:100;
-}
-
-#indicador.oculto{
-  display:none;
 }
 
 #video-recuerdo{
   display:none;
-}
-
-@keyframes pulse{
-  0%,100%{transform:scale(1);}
-  50%{transform:scale(1.08);}
 }
 </style>
 </head>
@@ -137,14 +106,12 @@ canvas{
 <body>
 
 <div id="splash">
-  <div style="font-size:3.5rem;margin-bottom:1rem;animation:pulse 2s infinite">
-    📷
-  </div>
+  <div style="font-size:60px;">📷</div>
 
   <h1>Álbum Familiar</h1>
 
   <p>
-    Apunta la cámara a una foto y revive el recuerdo.
+    Apunta la cámara a una fotografía para revivir un recuerdo.
   </p>
 
   <button onclick="iniciar()">
@@ -159,9 +126,8 @@ canvas{
 </div>
 
 <div id="panel">
-  <div class="etiqueta">✦ Recuerdo</div>
-  <div class="titulo" id="titulo"></div>
-  <div class="recuerdo" id="recuerdo"></div>
+  <h2 id="titulo"></h2>
+  <p id="recuerdo"></p>
 </div>
 
 <video
@@ -170,68 +136,56 @@ canvas{
   loop
   muted
   playsinline
-  webkit-playsinline
   crossorigin="anonymous">
 </video>
 
-<script type="module">
+<script>
 
-import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
-import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js';
-
-const FOTOS = [
-{
+const FOTOS = [{
   titulo:"Mi recuerdo",
-  recuerdo:"Aquí va el texto de tu recuerdo especial..."
-}
-];
+  recuerdo:"Aquí va tu recuerdo especial."
+}];
 
-window.iniciar = async () => {
+async function iniciar(){
 
-  try {
+  try{
 
-    document.getElementById("splash").style.display = "none";
-    document.getElementById("contenedor").style.display = "block";
+    document.getElementById("splash").style.display="none";
+    document.getElementById("contenedor").style.display="block";
 
-    const mindarThree = new MindARThree({
+    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.querySelector("#contenedor"),
       imageTargetSrc: "./foto1.mind"
     });
 
-    const {
-      renderer,
-      scene,
-      camera
-    } = mindarThree;
+    const {renderer, scene, camera} = mindarThree;
+
+    const light = new THREE.HemisphereLight(
+      0xffffff,
+      0xbbbbff,
+      1
+    );
+
+    scene.add(light);
 
     const anchor = mindarThree.addAnchor(0);
 
-    const videoRecuerdo =
-      document.getElementById("video-recuerdo");
+    const video = document.getElementById("video-recuerdo");
 
-    const texture =
-      new THREE.VideoTexture(videoRecuerdo);
+    const texture = new THREE.VideoTexture(video);
 
-    const geometry =
-      new THREE.PlaneGeometry(1,0.56);
-
-    const material =
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(1,0.56),
       new THREE.MeshBasicMaterial({
-        map:texture,
-        transparent:true
-      });
-
-    const plane =
-      new THREE.Mesh(
-        geometry,
-        material
-      );
+        map:texture
+      })
+    );
 
     anchor.group.add(plane);
 
     anchor.onTargetFound = () => {
 
-      videoRecuerdo.play().catch(()=>{});
+      video.play();
 
       document.getElementById("titulo").textContent =
         FOTOS[0].titulo;
@@ -241,20 +195,14 @@ window.iniciar = async () => {
 
       document.getElementById("panel")
         .classList.add("visible");
-
-      document.getElementById("indicador")
-        .classList.add("oculto");
     };
 
     anchor.onTargetLost = () => {
 
-      videoRecuerdo.pause();
+      video.pause();
 
       document.getElementById("panel")
         .classList.remove("visible");
-
-      document.getElementById("indicador")
-        .classList.remove("oculto");
     };
 
     await mindarThree.start();
@@ -265,16 +213,16 @@ window.iniciar = async () => {
 
     console.log("MindAR iniciado correctamente");
 
-  } catch(error){
+  }catch(error){
 
     console.error(error);
 
     alert(
-      "Error iniciando AR:\n\n" +
+      "Error:\n\n" +
       error.message
     );
   }
-};
+}
 
 </script>
 
