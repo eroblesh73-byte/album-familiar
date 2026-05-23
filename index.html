@@ -153,7 +153,10 @@ async function iniciar(){
 
     document.getElementById("splash").style.display="none";
     document.getElementById("contenedor").style.display="block";
-
+    
+    console.log("MINDAR =", window.MINDAR);
+    console.log("THREE =", window.THREE);
+    
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.querySelector("#contenedor"),
       imageTargetSrc: "./foto1.mind"
