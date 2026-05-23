@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Álbum Familiar AR</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#c4813a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Álbum AR" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #1a1008;
+      overflow: hidden;
+    }
+
+    /* Pantalla de bienvenida */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(160deg, #2c1a0e 0%, #1a1008 60%, #0e0a05 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    #splash .icono {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: pulso 2s ease-in-out infinite;
+    }
+
+    @keyframes pulso {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    #splash h1 {
+      font-size: 2rem;
+      color: #f5e6c8;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    #splash p {
+      color: #c4a97d;
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 320px;
+      margin-bottom: 2rem;
+    }
+
+    #splash button {
+      background: #c4813a;
+      color: #fff8f0;
+      border: none;
+      padding: 0.9rem 2.5rem;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-family: 'Georgia', serif;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    #splash button:active { transform: scale(0.97); }
+    #splash button:hover { background: #d4924b; }
+
+    /* Escena AR */
+    a-scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    /* Panel de recuerdo */
+    #panel-recuerdo {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(20, 12, 4, 0.92);
+      border-top: 1px solid #c4813a55;
+      padding: 1rem 1.5rem 1.5rem;
+      transform: translateY(100%);
+      transition: transform 0.4s ease;
+      z-index: 100;
+      max-height: 40vh;
+      overflow-y: auto;
+    }
+
+    #panel-recuerdo.visible {
+      transform: translateY(0);
+    }
+
+    #panel-recuerdo .etiqueta {
+      font-size: 0.7rem;
+      color: #c4813a;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    #panel-recuerdo .titulo-foto {
+      font-size: 1.1rem;
+      color: #f5e6c8;
+      margin-bottom: 0.5rem;
+    }
+
+    #panel-recuerdo .texto-recuerdo {
+      font-size: 0.95rem;
+      color: #c4a97d;
+      line-height: 1.7;
+      font-style: italic;
+    }
+
+    /* Indicador de escaneo */
+    #indicador {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20,12,4,0.85);
+      border: 1px solid #c4813a44;
+      color: #c4a97d;
+      font-size: 0.85rem;
+      padding: 0.5rem 1.2rem;
+      border-radius: 50px;
+      z-index: 100;
+      letter-spacing: 0.05em;
+      transition: opacity 0.4s;
+      white-space: nowrap;
+    }
+
+    #indicador.oculto { opacity: 0; pointer-events: none; }
+
+    video { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Pantalla de bienvenida -->
+  <div id="splash">
+    <div class="icono">📷</div>
+    <h1>Álbum Familiar</h1>
+    <p>Apunta la cámara a cualquier foto de la casa y descubre el recuerdo que guarda.</p>
+    <button onclick="iniciar()">Abrir cámara</button>
+  </div>
+
+  <!-- Indicador flotante -->
+  <div id="indicador">📸 Apunta a una foto...</div>
+
+  <!-- Panel de texto del recuerdo -->
+  <div id="panel-recuerdo">
+    <div class="etiqueta">✦ Recuerdo</div>
+    <div class="titulo-foto" id="titulo-foto"></div>
+    <div class="texto-recuerdo" id="texto-recuerdo"></div>
+  </div>
+
+  <!-- Escena AR (oculta hasta que se inicia) -->
+  <a-scene
+    id="escena"
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+    renderer="logarithmicDepthBuffer: true; antialias: true;"
+    vr-mode-ui="enabled: false"
+    style="display:none;"
+  >
+
+    <!-- ============================================================
+         FOTO 1: Leo
+         Cambia "markers/foto1.patt" por tu archivo .patt real
+         Cambia "videos/video1.mp4" por tu video real
+    ============================================================ -->
+    <a-marker
+      type="pattern"
+      url="markers/foto1.patt"
+      id="marker-1"
+      data-titulo="14 Mayo 2026"
+      data-recuerdo="Esa noche todos llegaron de sorpresa. Mamá no sabía que habíamos planeado la cena desde semanas antes. La cara que puso cuando encendimos las velas... nunca la voy a olvidar."
+    >
+      <a-video
+        src="#video1"
+        width="1.6" height="0.9"
+        position="0 0.5 0"
+        rotation="-90 0 0"
+      ></a-video>
+    </a-marker>
+
+    <!-- ============================================================
+         FOTO 2: Cumpleaños de Abuela
+    ============================================================ -->
+    <a-marker
+      type="pattern"
+      url="markers/foto2.patt"
+      id="marker-2"
+      data-titulo="Cumpleaños de Abuela"
+      data-recuerdo="Sus 75 años. Vinieron primos que no veíamos desde hacía diez años. Cantamos hasta la madrugada y ella bailó con todos, uno por uno. Decía que ese era su mejor regalo."
+    >
+      <a-video
+        src="#video2"
+        width="1.6" height="0.9"
+        position="0 0.5 0"
+        rotation="-90 0 0"
+      ></a-video>
+    </a-marker>
+
+    <!-- ============================================================
+         FOTO 3: Vacaciones en la playa
+    ============================================================ -->
+    <a-marker
+      type="pattern"
+      url="markers/foto3.patt"
+      id="marker-3"
+      data-titulo="Verano en la playa"
+      data-recuerdo="El primer viaje familiar después de la pandemia. Los niños vieron el mar por primera vez. Se quedaron parados en la orilla sin decir nada, solo mirando. Ese silencio valió todo."
+    >
+      <a-video
+        src="#video3"
+        width="1.6" height="0.9"
+        position="0 0.5 0"
+        rotation="-90 0 0"
+      ></a-video>
+    </a-marker>
+
+    <!-- ============================================================
+         AGREGA MÁS FOTOS AQUÍ — copia el bloque <a-marker> de arriba,
+         cambia el número (foto4, video4, marker-4) y llena los datos.
+    ============================================================ -->
+
+    <a-camera-static></a-camera-static>
+  </a-scene>
+
+  <!-- Videos (ocultos, se precargan) -->
+  <video id="video1" src="videos/video1.mp4" preload="auto" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
+  <video id="video2" src="videos/video2.mp4" preload="auto" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
+  <video id="video3" src="videos/video3.mp4" preload="auto" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
+  <!-- Agrega más <video> según tus fotos -->
+
+  <script>
+    // IDs de todos los marcadores registrados
+    const marcadores = ['marker-1', 'marker-2', 'marker-3'];
+    let marcadorActivo = null;
+
+    function iniciar() {
+      document.getElementById('splash').style.display = 'none';
+      document.getElementById('escena').style.display = 'block';
+      registrarEventos();
+    }
+
+    // ── PWA: registrar Service Worker ──
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    // ── PWA: banner "Agregar a pantalla de inicio" ──
+    let promptInstalacion = null;
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      promptInstalacion = e;
+
+      // Mostrar botón de instalación en la splash
+      const btn = document.createElement('button');
+      btn.textContent = '📲 Instalar en mi celular';
+      btn.style.cssText = `
+        margin-top: 0.8rem;
+        background: transparent;
+        color: #c4a97d;
+        border: 1px solid #c4813a88;
+        padding: 0.7rem 2rem;
+        border-radius: 50px;
+        font-size: 0.95rem;
+        font-family: Georgia, serif;
+        cursor: pointer;
+      `;
+      btn.onclick = () => {
+        promptInstalacion.prompt();
+        promptInstalacion.userChoice.then(() => { promptInstalacion = null; });
+      };
+      const splash = document.getElementById('splash');
+      if (splash) splash.appendChild(btn);
+    });
+
+    function registrarEventos() {
+      marcadores.forEach(id => {
+        const marker = document.getElementById(id);
+        if (!marker) return;
+
+        const videoEl = marker.querySelector('a-video');
+        const videoId = videoEl ? videoEl.getAttribute('src').replace('#','') : null;
+        const videoDOM = videoId ? document.getElementById(videoId) : null;
+
+        marker.addEventListener('markerFound', () => {
+          marcadorActivo = id;
+
+          // Reproducir video
+          if (videoDOM) videoDOM.play().catch(() => {});
+
+          // Mostrar panel de recuerdo
+          document.getElementById('titulo-foto').textContent = marker.dataset.titulo || '';
+          document.getElementById('texto-recuerdo').textContent = marker.dataset.recuerdo || '';
+          document.getElementById('panel-recuerdo').classList.add('visible');
+          document.getElementById('indicador').classList.add('oculto');
+        });
+
+        marker.addEventListener('markerLost', () => {
+          if (marcadorActivo === id) {
+            marcadorActivo = null;
+            if (videoDOM) videoDOM.pause();
+            document.getElementById('panel-recuerdo').classList.remove('visible');
+            document.getElementById('indicador').classList.remove('oculto');
+          }
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
