@@ -118,7 +118,17 @@ async function iniciar() {
     document.getElementById('panel').classList.remove('visible');
     document.getElementById('indicador').classList.remove('oculto');
   };
-
+  
+// Mostrar cámara directamente
+const stream = await navigator.mediaDevices.getUserMedia({ 
+  video: { facingMode: 'environment', width: 1280, height: 720 } 
+});
+const camEl = document.createElement('video');
+camEl.srcObject = stream;
+camEl.autoplay = true;
+camEl.playsinline = true;
+camEl.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
+document.getElementById('contenedor').prepend(camEl);
   await mindarController.start();
   
 // Corregir brillo en Samsung
