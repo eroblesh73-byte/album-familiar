@@ -202,42 +202,6 @@
     </a-marker>
 
     <!-- ============================================================
-         FOTO 2: Cumpleaños de Abuela
-    ============================================================ -->
-    <a-marker
-      type="pattern"
-      url="markers/foto2.patt"
-      id="marker-2"
-      data-titulo="Cumpleaños de Abuela"
-      data-recuerdo="Sus 75 años. Vinieron primos que no veíamos desde hacía diez años. Cantamos hasta la madrugada y ella bailó con todos, uno por uno. Decía que ese era su mejor regalo."
-    >
-      <a-video
-        src="#video2"
-        width="1.6" height="0.9"
-        position="0 0.5 0"
-        rotation="-90 0 0"
-      ></a-video>
-    </a-marker>
-
-    <!-- ============================================================
-         FOTO 3: Vacaciones en la playa
-    ============================================================ -->
-    <a-marker
-      type="pattern"
-      url="markers/foto3.patt"
-      id="marker-3"
-      data-titulo="Verano en la playa"
-      data-recuerdo="El primer viaje familiar después de la pandemia. Los niños vieron el mar por primera vez. Se quedaron parados en la orilla sin decir nada, solo mirando. Ese silencio valió todo."
-    >
-      <a-video
-        src="#video3"
-        width="1.6" height="0.9"
-        position="0 0.5 0"
-        rotation="-90 0 0"
-      ></a-video>
-    </a-marker>
-
-    <!-- ============================================================
          AGREGA MÁS FOTOS AQUÍ — copia el bloque <a-marker> de arriba,
          cambia el número (foto4, video4, marker-4) y llena los datos.
     ============================================================ -->
@@ -247,13 +211,11 @@
 
   <!-- Videos (ocultos, se precargan) -->
   <video id="video1" src="videos/video1.mp4" preload="auto" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
-  <video id="video2" src="videos/video2.mp4" preload="auto" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
-  <video id="video3" src="videos/video3.mp4" preload="auto" loop playsinline webkit-playsinline crossorigin="anonymous"></video>
-  <!-- Agrega más <video> según tus fotos -->
+   <!-- Agrega más <video> según tus fotos -->
 
   <script>
     // IDs de todos los marcadores registrados
-    const marcadores = ['marker-1', 'marker-2', 'marker-3'];
+    const marcadores = ['marker-1'];
     let marcadorActivo = null;
 
     function iniciar() {
