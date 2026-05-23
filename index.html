@@ -97,29 +97,35 @@
     }
 
     function iniciar() {
-      document.getElementById('splash').style.display = 'none';
-      document.getElementById('escena').style.display = 'block';
+  document.getElementById('splash').style.display = 'none';
+  document.getElementById('escena').style.display = 'block';
 
-      const sceneEl = document.getElementById('escena');
-            });
+  // Pedir permiso de cámara explícitamente
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      stream.getTracks().forEach(track => track.stop());
+    })
+    .catch(err => {
+      alert('Necesitas dar permiso de cámara para usar la app. Ve a Ajustes > Chrome > Cámara > Permitir');
+    });
 
-      const target = document.querySelector('[mindar-image-target]');
-      const video = document.getElementById('video1');
+  const target = document.querySelector('[mindar-image-target]');
+  const video = document.getElementById('video1');
 
-      target.addEventListener('targetFound', () => {
-        video.play().catch(() => {});
-        document.getElementById('titulo-foto').textContent = target.dataset.titulo;
-        document.getElementById('texto-recuerdo').textContent = target.dataset.recuerdo;
-        document.getElementById('panel-recuerdo').classList.add('visible');
-        document.getElementById('indicador').classList.add('oculto');
-      });
+  target.addEventListener('targetFound', () => {
+    video.play().catch(() => {});
+    document.getElementById('titulo-foto').textContent = target.dataset.titulo;
+    document.getElementById('texto-recuerdo').textContent = target.dataset.recuerdo;
+    document.getElementById('panel-recuerdo').classList.add('visible');
+    document.getElementById('indicador').classList.add('oculto');
+  });
 
-      target.addEventListener('targetLost', () => {
-        video.pause();
-        document.getElementById('panel-recuerdo').classList.remove('visible');
-        document.getElementById('indicador').classList.remove('oculto');
-      });
-    }
+  target.addEventListener('targetLost', () => {
+    video.pause();
+    document.getElementById('panel-recuerdo').classList.remove('visible');
+    document.getElementById('indicador').classList.remove('oculto');
+  });
+}
   </script>
 
 </body>
