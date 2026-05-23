@@ -71,7 +71,7 @@
 
   <a-scene
     id="escena"
-    mindar-image="imageTargetSrc: foto1.mind; autoStart: false;"
+    mindar-image="imageTargetSrc: foto1.mind;"
     color-space="sRGB"
     renderer="colorManagement: true; physicallyCorrectLights: true;"
     vr-mode-ui="enabled: false"
@@ -101,10 +101,7 @@
       document.getElementById('escena').style.display = 'block';
 
       const sceneEl = document.getElementById('escena');
-      sceneEl.addEventListener('loaded', () => {
-        const system = sceneEl.systems['mindar-image-system'];
-        if (system) system.start();
-      });
+            });
 
       const target = document.querySelector('[mindar-image-target]');
       const video = document.getElementById('video1');
