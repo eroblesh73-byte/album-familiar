@@ -120,7 +120,14 @@ async function iniciar() {
   };
 
   await mindarController.start();
+  
+// Corregir brillo en Samsung
+const canvas = document.querySelector('canvas');
+if (canvas) canvas.style.filter = 'brightness(3)';
 
+// Corregir video de cámara
+const camVideo = document.querySelector('#contenedor video');
+if (camVideo) camVideo.style.filter = 'brightness(3)';
   renderer.setAnimationLoop(() => {
     renderer.render(scene, camera);
   });
